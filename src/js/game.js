@@ -232,6 +232,7 @@ export class Game {
     this.player.x = this.worldWidth / 2;
     this.player.y = this.worldHeight / 2;
     this.player.resetStats();
+    this.camera = { x: this.player.x, y: this.player.y };
 
     this.enemies = [];
     this.projectiles = [];
@@ -540,10 +541,58 @@ export class Game {
     // Apply Screen Shake offset
     const shakeOffset = this.shake.getOffset();
 
-    // Scale & center camera to fit world view while preserving aspect ratio
-    const scale = Math.min(canvas.width / this.worldWidth, canvas.height / this.worldHeight);
-    const offsetX = (canvas.width - this.worldWidth * scale) / 2 + shakeOffset.x;
-    const offsetY = (canvas.height - this.worldHeight * scale) / 2 + shakeOffset.y;
+    // Dynamic Responsive Camera Scaling Math
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = canvas.width / dpr;
+    const cssHeight = canvas.height / dpr;
+
+    let targetWorldWidth, targetWorldHeight;
+
+    if (cssWidth < cssHeight) {
+      // Portrait Orientation (Phones & Portrait Tablets)
+      // Dynamic camera zoom: visible width spans ~540 to 900 world units depending on screen width.
+      // Squeezing 1600px into portrait phone is avoided; player & enemies appear ~3x larger and visually prominent.
+      targetWorldWidth = Math.min(900, Math.max(540, cssWidth * 1.4));
+      targetWorldHeight = targetWorldWidth * (cssHeight / cssWidth);
+    } else {
+      // Landscape Orientation & Desktop
+      targetWorldWidth = Math.min(1600, Math.max(800, cssWidth * 1.1));
+      targetWorldHeight = Math.min(1200, Math.max(600, cssHeight * 1.1));
+    }
+
+    const scaleX = canvas.width / targetWorldWidth;
+    const scaleY = canvas.height / targetWorldHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    const viewWorldWidth = canvas.width / scale;
+    const viewWorldHeight = canvas.height / scale;
+
+    // Smooth camera tracking toward player position
+    if (!this.camera) {
+      this.camera = { x: this.player.x, y: this.player.y };
+    } else {
+      this.camera.x += (this.player.x - this.camera.x) * 0.15;
+      this.camera.y += (this.player.y - this.camera.y) * 0.15;
+    }
+
+    // Clamp camera position so viewport stays strictly inside world bounds [0, 0, worldWidth, worldHeight]
+    let camX = this.camera.x;
+    let camY = this.camera.y;
+
+    if (viewWorldWidth < this.worldWidth) {
+      camX = Math.max(viewWorldWidth / 2, Math.min(this.worldWidth - viewWorldWidth / 2, camX));
+    } else {
+      camX = this.worldWidth / 2;
+    }
+
+    if (viewWorldHeight < this.worldHeight) {
+      camY = Math.max(viewWorldHeight / 2, Math.min(this.worldHeight - viewWorldHeight / 2, camY));
+    } else {
+      camY = this.worldHeight / 2;
+    }
+
+    const offsetX = canvas.width / 2 - camX * scale + shakeOffset.x;
+    const offsetY = canvas.height / 2 - camY * scale + shakeOffset.y;
 
     ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);

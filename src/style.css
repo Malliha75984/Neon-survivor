@@ -728,6 +728,48 @@ html, body {
 }
 
 /* Responsive Adaptation */
+@media (max-width: 480px) {
+  .glass-panel {
+    padding: 18px 14px;
+    border-radius: var(--radius-md);
+  }
+  .neon-title {
+    font-size: 1.85rem;
+  }
+  .neon-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 2.5px;
+  }
+  .hud-stat-box {
+    padding: 2px 6px;
+    min-width: 52px;
+  }
+  .hud-stat-label {
+    font-size: 0.55rem;
+  }
+  .hud-stat-val {
+    font-size: 0.85rem;
+  }
+  .health-container {
+    max-width: 120px;
+  }
+  .upgrade-card {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .upgrade-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  .upgrade-details h3 {
+    font-size: 0.9rem;
+  }
+  .upgrade-details p {
+    font-size: 0.75rem;
+  }
+}
+
 @media (min-width: 640px) {
   .upgrade-cards-container {
     flex-direction: row;
