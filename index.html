@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Neon Survivor — Survive the Signal</title>
+  <meta name="description" content="A mobile-first 2D top-down survival arcade browser game. Fight neon waves, collect XP, upgrade your weapon, and defeat the final boss!" />
+  <!-- Google Font: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Virtual Joystick Touch Zone Indicator (Mobile feedback) -->
+    <div id="joystick-container" class="joystick-container hidden">
+      <div id="joystick-base" class="joystick-base">
+        <div id="joystick-stick" class="joystick-stick"></div>
+      </div>
+    </div>
+
+    <!-- HUD Overlay (Visible during GAMEPLAY & LEVEL_UP & PAUSED) -->
+    <div id="hud-overlay" class="overlay hud-overlay hidden">
+      <!-- Top Bar: Level & XP -->
+      <div class="hud-top-bar">
+        <div class="xp-bar-container">
+          <div id="xp-bar-fill" class="xp-bar-fill" style="width: 0%;"></div>
+          <span id="level-display" class="hud-badge level-badge">LVL 1</span>
+        </div>
+      </div>
+
+      <!-- Header Info Bar: Health, Score, Wave, Pause -->
+      <div class="hud-header">
+        <div class="health-container">
+          <div class="health-bar-bg">
+            <div id="health-bar-fill" class="health-bar-fill" style="width: 100%;"></div>
+          </div>
+          <span id="health-text" class="health-text">100 / 100</span>
+        </div>
+
+        <div class="hud-center-info">
+          <div id="wave-display" class="hud-stat-box">
+            <span class="hud-stat-label">WAVE</span>
+            <span id="wave-value" class="hud-stat-val text-cyan">1 / 7</span>
+          </div>
+          <div id="score-display" class="hud-stat-box">
+            <span class="hud-stat-label">SCORE</span>
+            <span id="score-value" class="hud-stat-val text-yellow">0</span>
+          </div>
+        </div>
+
+        <button id="btn-pause" class="btn-icon" aria-label="Pause Game">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+      </div>
+
+      <!-- Boss Health Bar (Only visible on Wave 7 Final Boss) -->
+      <div id="boss-bar-container" class="boss-bar-container hidden">
+        <div class="boss-bar-header">
+          <span class="boss-title">CORE ANNIHILATOR [FINAL BOSS]</span>
+          <span id="boss-hp-text" class="boss-hp-text">100%</span>
+        </div>
+        <div class="boss-bar-bg">
+          <div id="boss-bar-fill" class="boss-bar-fill" style="width: 100%;"></div>
+        </div>
+      </div>
+
+      <!-- Wave Notification Banner -->
+      <div id="wave-banner" class="wave-banner hidden">
+        <h2 id="wave-banner-title">WAVE 1</h2>
+        <p id="wave-banner-subtitle">ENGAGE NEON SIGNAL</p>
+      </div>
+    </div>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="screen-main-menu" class="screen-overlay screen-active">
+      <div class="menu-card glass-panel text-center">
+        <div class="game-logo">
+          <h1 class="neon-title">NEON SURVIVOR</h1>
+          <p class="neon-subtitle">SURVIVE THE SIGNAL</p>
+        </div>
+
+        <div class="high-score-banner">
+          <span class="label">BEST SCORE</span>
+          <span id="menu-high-score" class="val">0</span>
+        </div>
+
+        <div class="menu-actions">
+          <button id="btn-play" class="btn btn-primary btn-large glow-effect">PLAY RUN</button>
+          <button id="btn-how-to-play" class="btn btn-secondary">HOW TO PLAY</button>
+          <button id="btn-settings" class="btn btn-secondary">SETTINGS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW TO PLAY SCREEN -->
+    <div id="screen-how-to-play" class="screen-overlay hidden">
+      <div class="menu-card glass-panel scrollable">
+        <h2 class="screen-title text-cyan">HOW TO PLAY</h2>
+
+        <div class="guide-grid">
+          <div class="guide-card">
+            <div class="guide-icon text-cyan">🕹️</div>
+            <div class="guide-info">
+              <h3>MOVE</h3>
+              <p>Drag anywhere on screen (mobile) or use <b>WASD / Arrow Keys</b> (desktop).</p>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-icon text-magenta">🎯</div>
+            <div class="guide-info">
+              <h3>AUTOMATIC ATTACK</h3>
+              <p>Your weapon automatically targets and shoots the nearest hostile threat.</p>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-icon text-yellow">⚡</div>
+            <div class="guide-info">
+              <h3>COLLECT XP & LEVEL UP</h3>
+              <p>Defeat enemies to drop glowing XP orbs. Fill the bar to choose upgrades.</p>
+            </div>
+          </div>
+
+          <div class="guide-card">
+            <div class="guide-icon text-purple">👑</div>
+            <div class="guide-info">
+              <h3>FINAL BOSS</h3>
+              <p>Survive 6 intense waves to summon and destroy the Core Annihilator Boss!</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-how-to-back" class="btn btn-secondary btn-full margin-top">BACK TO MENU</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS SCREEN -->
+    <div id="screen-settings" class="screen-overlay hidden">
+      <div class="menu-card glass-panel">
+        <h2 class="screen-title text-cyan">SETTINGS</h2>
+
+        <div class="settings-list">
+          <div class="setting-row">
+            <div class="setting-label">
+              <span class="setting-title">Sound Effects</span>
+              <span class="setting-desc">Audio feedback for lasers, hits & pickups</span>
+            </div>
+            <button id="btn-toggle-sfx" class="toggle-btn toggle-on" aria-label="Toggle SFX">ON</button>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-label">
+              <span class="setting-title">Screen Shake</span>
+              <span class="setting-desc">Vibration effects on heavy impacts</span>
+            </div>
+            <button id="btn-toggle-shake" class="toggle-btn toggle-on" aria-label="Toggle Screen Shake">ON</button>
+          </div>
+        </div>
+
+        <button id="btn-settings-back" class="btn btn-secondary btn-full margin-top">BACK TO MENU</button>
+      </div>
+    </div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="screen-pause" class="screen-overlay hidden">
+      <div class="menu-card glass-panel text-center">
+        <h2 class="screen-title text-yellow">GAME PAUSED</h2>
+
+        <div class="pause-actions">
+          <button id="btn-resume" class="btn btn-primary btn-full">RESUME</button>
+          <button id="btn-restart-pause" class="btn btn-secondary btn-full">RESTART</button>
+          <button id="btn-menu-pause" class="btn btn-danger btn-full">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVEL UP OVERLAY -->
+    <div id="screen-level-up" class="screen-overlay hidden">
+      <div class="level-up-container glass-panel">
+        <div class="level-up-header">
+          <h2 class="level-up-title neon-pulse">LEVEL UP!</h2>
+          <p class="level-up-subtitle">CHOOSE AN UPGRADE</p>
+        </div>
+
+        <div id="upgrade-cards-container" class="upgrade-cards-container">
+          <!-- Dynamically populated 3 upgrade cards -->
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="screen-game-over" class="screen-overlay hidden">
+      <div class="menu-card glass-panel text-center">
+        <h2 class="screen-title text-magenta">GAME OVER</h2>
+        <p class="summary-subtitle">THE SIGNAL OVERWHELMED YOU</p>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-lbl">FINAL SCORE</span>
+            <span id="go-score" class="stat-val text-yellow">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">WAVE REACHED</span>
+            <span id="go-wave" class="stat-val text-cyan">1</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">LEVEL</span>
+            <span id="go-level" class="stat-val text-purple">1</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">KILLS</span>
+            <span id="go-kills" class="stat-val text-magenta">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">TIME SURVIVED</span>
+            <span id="go-time" class="stat-val">00:00</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">BEST SCORE</span>
+            <span id="go-best-score" class="stat-val text-yellow">0</span>
+          </div>
+        </div>
+
+        <div class="menu-actions margin-top">
+          <button id="btn-play-again-go" class="btn btn-primary btn-full glow-effect">PLAY AGAIN</button>
+          <button id="btn-menu-go" class="btn btn-secondary btn-full">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="screen-victory" class="screen-overlay hidden">
+      <div class="menu-card glass-panel text-center">
+        <h2 class="screen-title text-cyan neon-pulse">VICTORY!</h2>
+        <p class="summary-subtitle">CORE ANNIHILATOR DESTROYED</p>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-lbl">FINAL SCORE</span>
+            <span id="vic-score" class="stat-val text-yellow">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">ENEMIES DEFEATED</span>
+            <span id="vic-kills" class="stat-val text-magenta">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">LEVEL REACHED</span>
+            <span id="vic-level" class="stat-val text-purple">1</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-lbl">SURVIVAL TIME</span>
+            <span id="vic-time" class="stat-val">00:00</span>
+          </div>
+          <div class="stat-item full-width">
+            <span class="stat-lbl">BEST SCORE</span>
+            <span id="vic-best-score" class="stat-val text-yellow">0</span>
+          </div>
+        </div>
+
+        <div class="menu-actions margin-top">
+          <button id="btn-play-again-vic" class="btn btn-primary btn-full glow-effect">PLAY AGAIN</button>
+          <button id="btn-menu-vic" class="btn btn-secondary btn-full">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
